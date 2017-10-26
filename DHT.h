@@ -8,9 +8,9 @@
 #define DHT_DA      0
 #define DHT_DA1     1
 
-#define DATA_DDR    DDRC.3
-#define DATA_PORT   PORTC.3
-#define DATA_PIN    PINC.3
+#define DATA_DDR    DDRC.2
+#define DATA_PORT   PORTC.2
+#define DATA_PIN    PINC.2
 
 unsigned char DHT_GetTemHumi (unsigned char select);
 

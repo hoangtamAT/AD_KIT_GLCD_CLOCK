@@ -36,22 +36,16 @@ unsigned char DHT_GetTemHumi (unsigned char select)
     //Tinh toan check sum 
     checksum=buffer[0]+buffer[1]+buffer[2]+buffer[3]; 
     //Kiem tra check sum 
-    if((checksum)!=buffer[4])return DHT_ER;
+    if((checksum)!=buffer[4])return DHT_ER;  
     if(select==DHT_ND)
         {
          return(buffer[2]);
         }
-    else if(select==DHT_ND1) 
-      { 
-            return(buffer[3]); 
-      } 
+
       else if(select==DHT_DA) 
       { 
             return(buffer[0]); 
       } 
-      else if(select==DHT_DA1) 
-      { 
-            return(buffer[1]); 
-      } 
+ 
     return DHT_OK;
 }
