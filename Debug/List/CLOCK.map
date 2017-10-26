@@ -1,0 +1,96 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+__ds18b20_scratch_pad                                                             0x0188       9
+glcd_state                                                                        0x0191      29
+T                                                                                 0x01AE       2
+st7920_graphics_on                                                                0x01B0       1
+st7920_bits8_15                                                                   0x01B1       1
+xt                                                                                0x01B2       1
+yt                                                                                0x01B3       1
+_seed                                                                             0x01B4       4
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+min_set                                                                           0x0000       1
+hour_set                                                                          0x0001       1
+alarm                                                                             0x0002       1
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+blink                                                                             R2.0      1bit
+flash_sec                                                                         R2.1      1bit
+hour                                                                              R5           1
+minn                                                                              R4           1
+sec                                                                               R7           1
+day                                                                               R6           1
+date                                                                              R9           1
+month                                                                             R8           1
+year                                                                              R11          1
+mode                                                                              R10          1
+time                                                                              R13          1
+time1                                                                             R12          1
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+timer0_init                                                                       0x00240      6
+timer0_stop                                                                       0x00246      4
+ext_int0_isr                                                                      0x0024A     38
+ext_int1_isr                                                                      0x00270      7
+timer0_ovf_isr                                                                    0x00277      9
+timer1_ovf_isr                                                                    0x00280     12
+tempDisplay                                                                       0x0028C     64
+getTime                                                                           0x002CC     22
+timeDisplay                                                                       0x002E2     58
+dateDisplay                                                                       0x0031C     65
+alarmDisplay                                                                      0x0035D     67
+setting                                                                           0x003A0    212
+main                                                                              0x00474    114
+rtc_init                                                                          0x004E6     20
+rtc_get_time                                                                      0x004FA     16
+rtc_set_time                                                                      0x0050A      8
+rtc_get_date                                                                      0x00512     16
+rtc_set_date                                                                      0x00522     10
+ds18b20_select                                                                    0x0052C     27
+ds18b20_read_spd                                                                  0x00547     32
+ds18b20_temperature                                                               0x00567     54
+ds18b20_init                                                                      0x0059D     57
+st7920_delay_G102                                                                 0x005D6      4
+st7920_wrbus_G102                                                                 0x005DA     20
+st7920_rdbus_G102                                                                 0x005EE     16
+st7920_busy_G102                                                                  0x005FE     21
+st7920_wrdata                                                                     0x00613      6
+st7920_rddata                                                                     0x00619      4
+st7920_wrcmd                                                                      0x0061D      5
+st7920_setxy_G102                                                                 0x00622     17
+glcd_display                                                                      0x00633     19
+glcd_cleargraphics                                                                0x00646     32
+glcd_init                                                                         0x00666    122
+st7920_rdbyte_G102                                                                0x006E0     15
+st7920_wrbyte_G102                                                                0x006EF     14
+glcd_putpixel                                                                     0x006FD     37
+st7920_wrmasked_G102                                                              0x00722     69
+glcd_block                                                                        0x00767    378
+glcd_putcharcg                                                                    0x008E1     41
+glcd_clipx                                                                        0x0090A     17
+glcd_clipy                                                                        0x0091B     17
+glcd_getcharw_G103                                                                0x0092C    100
+glcd_new_line_G103                                                                0x00990     12
+glcd_putchar                                                                      0x0099C    140
+glcd_putcharxy                                                                    0x00A28      7
+glcd_outtextxy                                                                    0x00A2F     14
+glcd_outtext                                                                      0x00A3D     11
+glcd_putpixelm_G103                                                               0x00A48     25
+glcd_moveto                                                                       0x00A61      9
+glcd_line                                                                         0x00A6A    231
+bcd2bin                                                                           0x00B51     13
+bin2bcd                                                                           0x00B5E     10
+memset                                                                            0x00B68     15
+glcd_getmask                                                                      0x00B77      8
+glcd_mappixcolor1bit                                                              0x00B7F     40
+glcd_readmem                                                                      0x00BA7     26
+glcd_writemem                                                                     0x00BC1     27
+glcd_revbits                                                                      0x00BDC     19

@@ -1,1 +1,0 @@
-# AD_KIT_GLCD_CLOCK
