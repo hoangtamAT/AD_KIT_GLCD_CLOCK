@@ -22,6 +22,7 @@ Data Stack size         : 256
 *******************************************************/
 
 #include <mega8.h>
+#include <delay.h>
 #include <i2c.h>
 #include <ds1307.h>
 #include <1wire.h>
@@ -37,6 +38,8 @@ Data Stack size         : 256
 
 #define UP      PIND.1
 #define DOWN    PIND.0
+#define LIGHT   PORTB.5
+#define BUZZ    PORTC.1
 bit blink,flash_sec;
 char hour,minn,sec,day,date,month,year;
 unsigned char mode,time,time1;
@@ -45,7 +48,7 @@ eeprom unsigned char min_set,hour_set,alarm;
 
 void timer0_init()
 {
-TCCR0=(0<<CS02) | (1<<CS01) | (0<<CS00);
+TCCR0=(1<<CS02) | (0<<CS01) | (1<<CS00);
 TCNT0=0x00;
 TIMSK=1<<TOIE0;
 }
@@ -53,6 +56,18 @@ void timer0_stop()
 {
   TCCR0=0; 
   TIMSK=0<<TOIE0;
+}
+void timer1_init()
+{
+  TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (0<<WGM12) | (0<<CS12) | (1<<CS11) | (0<<CS10);
+  TIMSK=1<<TOIE1; 
+  TCNT1H=0x00;
+  TCNT1L=0x00;
+}
+void timer1_stop()
+{
+  TCCR1B=0;
+  TIMSK=0<<TOIE1; 
 }
 
 // Declare your global variables here
@@ -63,7 +78,8 @@ interrupt [EXT_INT0] void ext_int0_isr(void)
     //OK 
     rtc_set_time(hour,minn,sec);
     rtc_set_date(day,date,month,year);
-    timer0_stop();
+    timer0_stop();  
+    timer1_init();
     mode=0;
 }
 
@@ -71,16 +87,22 @@ interrupt [EXT_INT0] void ext_int0_isr(void)
 interrupt [EXT_INT1] void ext_int1_isr(void)
 {   
     //MODE 
-    mode++;
-    if(mode>8) mode=0;
+    mode++; 
+    timer1_stop();
+    timer0_init();
+    if(mode>8){  
+    timer0_stop();  
+    timer1_init();
+    mode=0;   
+     }
 }
 
 // Timer 0 overflow interrupt service routine
 interrupt [TIM0_OVF] void timer0_ovf_isr(void)
 {
-    //0.512ms
+    //65.536ms
     time++;
-    if(time>50) 
+    if(time>7) 
     {
       blink=~blink;
       time=0;
@@ -91,21 +113,21 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
 interrupt [TIM1_OVF] void timer1_ovf_isr(void)
 {   //0.13s
     time1++;
-    if(time>4)
-    {  
-        time1=0;
+    if(time1>4)
+    {
         flash_sec=~flash_sec;
+        time1=0;       
     }
     
 }
+
 void tempDisplay(unsigned char x, unsigned char y)
-{
-  float temp; 
-  unsigned int nhietdo;
+{ unsigned int nhietdo;
+  float temp;   
   temp=ds18b20_temperature(T);
   nhietdo=temp*10;
   glcd_setfont(font5x7);
-  glcd_putcharxy(x,y,48+nhietdo/100);
+  glcd_putcharxy(x,y+3,48+nhietdo/100);
   glcd_putchar(48+(nhietdo/10)%10);
   glcd_outtext(".");
   glcd_putchar(48+(nhietdo%100)%10);
@@ -217,40 +239,43 @@ void dateDisplay(unsigned char x, unsigned char y)
   
   if(blink%2==0 && mode==3)
   {
-    glcd_outtextxy(x+18,y,"  "); 
+    glcd_outtextxy(x,y,"  "); 
   } 
   if(blink%2==0 && mode==4)
   {
-    glcd_outtextxy(x+36,y,"  "); 
+    glcd_outtextxy(x+18,y,"  "); 
   }
   if(blink%2==0 && mode==5)
   {
-    glcd_outtextxy(x+54,y,"  "); 
+    glcd_outtextxy(x+36,y,"  "); 
   }
 }
 void alarmDisplay(unsigned char x, unsigned char y)
 {
-   glcd_setfont(font5x7);
-   glcd_putcharxy(x+10,y+1,48+hour_set/10);
+   glcd_setfont(font5x7);  
+   glcd_outtextxy(x,y,"ALARM");
+   glcd_putcharxy(x+40,y,48+hour_set/10);
    glcd_putchar(48+hour_set%10);
    glcd_outtext(":");
    glcd_putchar(48+min_set/10); 
-   glcd_putchar(48+min_set%10);   
+   glcd_putchar(48+min_set%10);
+   if(alarm==1) glcd_outtextxy(x+79,y,"ON ");
+   else glcd_outtextxy(x+79,y,"OFF");   
    
    if(mode==6 && blink==1)
    {
      glcd_setfont(font5x7);
-     glcd_outtextxy(x+28,y+1,"  ");
+     glcd_outtextxy(x+58,y,"  ");
    } 
    if(mode==7 && blink==1)
    {
      glcd_setfont(font5x7);
-     glcd_outtextxy(x+10,y+1,"  ");
+     glcd_outtextxy(x+40,y,"  ");
    } 
    if(mode==8 && blink==1)
    {
      glcd_setfont(font5x7);
-     glcd_outtextxy(x-3,y,"  "); 
+     glcd_outtextxy(x+79,y,"   "); 
    } 
 }
 /*
@@ -302,7 +327,7 @@ void setting(void)
             {
             minn++;
             };
-        while(!UP); // doi nha phim
+        //while(!UP); // doi nha phim
         }
    //==============
    if(DOWN==0)        // phim "DOWN" nhan
@@ -315,7 +340,7 @@ void setting(void)
             {
             minn--;
             };
-        while(!DOWN);
+        //while(!DOWN);
         }
  }
  //===============================
@@ -331,7 +356,7 @@ void setting(void)
             {
             hour++;
             };
-        while(!UP); // doi nha phim
+        //while(!UP); // doi nha phim
         }
    //==============
    if(DOWN==0)        // phim "DOWN" nhan
@@ -344,7 +369,7 @@ void setting(void)
             {
             hour--;
             };
-        while(!DOWN);
+        //while(!DOWN);
         }
     }
  //===============================
@@ -361,7 +386,7 @@ void setting(void)
             {
             date++;
             };
-        while(!UP);
+        //while(!UP);
         }
     //=========================================
     if(DOWN==0)        // phim "DOWN" nhan
@@ -375,7 +400,7 @@ void setting(void)
             {
             date--;
             };
-        while(!DOWN);
+        //while(!DOWN);
         }
     }
  //================================================
@@ -392,7 +417,7 @@ void setting(void)
             {
             month++;
             };
-        while(!UP);                                       // bao co phim nhan
+        //while(!UP);                                       // bao co phim nhan
         }
 /////////////////////////////////////////////////////////////
     if(DOWN==0)
@@ -405,7 +430,7 @@ void setting(void)
             {
             month--;
             };
-        while(!DOWN);
+        //while(!DOWN);
         }
     }
     //=================================
@@ -421,7 +446,7 @@ void setting(void)
             {
             year++;
             };
-        while(!UP);
+        //while(!UP);
         }
 ///////////////////////////////////////////////////////////////
     if(DOWN==0)
@@ -434,7 +459,7 @@ void setting(void)
             {
             year--;
             };
-        while(!DOWN);
+        //while(!DOWN);
         }
     }
 //====================
@@ -450,7 +475,7 @@ if(mode==6)   //chinh phut bao thuc
             {
             min_set++;
             };
-        while(!UP); // doi nha phim
+        //while(!UP); // doi nha phim
         }
    //==============
    if(DOWN==0)        // phim "DOWN" nhan
@@ -463,7 +488,7 @@ if(mode==6)   //chinh phut bao thuc
             {
             min_set--;
             };
-        while(!DOWN);
+        //while(!DOWN);
         }
  }
  //===============================
@@ -479,7 +504,7 @@ if(mode==6)   //chinh phut bao thuc
             {
             hour_set++;
             };
-        while(!UP); // doi nha phim
+        //while(!UP); // doi nha phim
         }
    //==============
    if(DOWN==0)        // phim "DOWN" nhan
@@ -492,7 +517,7 @@ if(mode==6)   //chinh phut bao thuc
             {
             hour_set--;
             };
-        while(!DOWN);
+        //while(!DOWN);
         }
     }
   //===================
@@ -572,7 +597,7 @@ OCR1BH=0x00;
 OCR1BL=0x00;
 
 // Timer(s)/Counter(s) Interrupt(s) initialization
-TIMSK=(0<<OCIE2) | (0<<TOIE2) | (0<<TICIE1) | (0<<OCIE1A) | (0<<OCIE1B) | (1<<TOIE1) | (1<<TOIE0);
+TIMSK=(0<<OCIE2) | (0<<TOIE2) | (0<<TICIE1) | (0<<OCIE1A) | (0<<OCIE1B) | (0<<TOIE1) | (0<<TOIE0);
 
 // External Interrupt(s) initialization
 // INT0: On
@@ -639,21 +664,32 @@ if(alarm==255)
   alarm=0;
   min_set=0;
   hour_set=0;
+  rtc_set_time(18,41,00);
+  rtc_set_date(2,30,10,17);
 }
+if(sec>59) sec=0;
 ds18b20_init(T,0,0,DS18B20_10BIT_RES);
+BUZZ=1;
+LIGHT=0;
+timer0_stop();  
+timer1_init();
 while (1)
       {
         timeDisplay(42,20);
-        dateDisplay(31,37); 
-        alarmDisplay(43,52);
+        dateDisplay(40,37); 
+        alarmDisplay(15,52);
         if(mode==0)
         { 
-        getTime();
-        tempDisplay(70,2); 
+        getTime(); 
+        tempDisplay(46,2); 
+        if(DOWN==0)
+            {
+             LIGHT=~LIGHT;
+             delay_ms(100);
+            }
         } 
         else
-        {
-          timer0_init();
+        { 
           setting();  
         }
 
